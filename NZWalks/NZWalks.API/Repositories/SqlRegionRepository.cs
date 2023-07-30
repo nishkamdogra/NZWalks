@@ -1,4 +1,5 @@
-﻿using NZWalks.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using NZWalks.API.Data;
 using NZWalks.API.Models.Domain;
 
 namespace NZWalks.API.Repositories
@@ -12,10 +13,53 @@ namespace NZWalks.API.Repositories
             this.dbContext = dbContext;
         }
 
-        public IEnumerable<Region> GetRegions()
+        public async Task<Region> AddAsync(Region region)
         {
-            var regions = dbContext.Regions.ToList();
+            await dbContext.AddAsync(region);
+            await dbContext.SaveChangesAsync();
+            return region;
+        }
+
+        public async Task<Region> DeleteAsync(Guid id)
+        {
+            var region = await dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
+            if (region == null)
+            {
+                return null;
+            }
+            dbContext.Regions.Remove(region);
+            await dbContext.SaveChangesAsync();
+            return region;
+        }
+
+        public async Task<IEnumerable<Region>> GetAllAsync()
+        {
+            var regions = await dbContext.Regions.ToListAsync();
             return regions;
+        }
+
+        public async Task<Region> GetByIdAsync(Guid id)
+        {
+            var region=await dbContext.Regions.FirstOrDefaultAsync(x=>x.Id==id);
+            return region;
+        }
+
+        public async Task<Region> UpdateAsync(Guid id, Region region)
+        {
+            var existingRegion= await dbContext.Regions.FirstOrDefaultAsync(x=>x.Id == id);
+            if (existingRegion == null)
+            {
+                return null;
+            }
+            existingRegion.Name = region.Name;
+            existingRegion.Code = region.Code;
+            existingRegion.Area = region.Area;
+            existingRegion.Lat = region.Lat;
+            existingRegion.Long = region.Long;
+            existingRegion.Population = region.Population;
+            await dbContext.SaveChangesAsync();
+            return existingRegion;
+
         }
     }
 }
